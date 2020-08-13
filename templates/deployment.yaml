@@ -28,16 +28,31 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
-          - name: BACKEND_STORE_URI
-            value: {{ .Values.backend_store_uri }}
+          - name: AWS_DEFAULT_REGION
+            value: "ams3"
           - name: DEFAULT_ARTIFACT_ROOT
-            value: {{ .Values.default_artifact_root }}
+            value: {{ .Values.defaultArtifactRoot }}
           - name: MLFLOW_S3_ENDPOINT_URL
-            value: {{ .Values.minio.url }}
+            value: {{ .Values.artifactStorage.endpoint }}
+          {{ if .Values.dbConnectionString }}
+          - name: BACKEND_STORE_URI
+            valueFrom:
+              secretKeyRef:
+                name: db-connection-string
+                key: db_connection_string
+          {{ end }}
+          {{ if and .Values.artifactStorage.key .Values.artifactStorage.secret }}
           - name: AWS_ACCESS_KEY_ID
-            value: {{ .Values.minio.accesskey }}
+            valueFrom:
+              secretKeyRef:
+                name: spaces-credentials
+                key: artifact_storage_key
           - name: AWS_SECRET_ACCESS_KEY
-            value: {{ .Values.minio.secretkey }}
+            valueFrom:
+              secretKeyRef:
+                name: spaces-credentials
+                key: artifact_storage_secret
+          {{ end }}
           livenessProbe:
             httpGet:
               path: /

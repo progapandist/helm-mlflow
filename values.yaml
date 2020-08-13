@@ -1,43 +1,37 @@
 replicaCount: 1
 
 image:
-  repository: selltom/mlflow
-  tag: 1.5.0
-  pullPolicy: IfNotPresent
+  repository: quay.io/lewagon/mlflow
+  tag: latest
+  pullPolicy: Always
 
-backend_store_uri: "postgresql://admin:password@postgresql.default.svc.cluster.local:5432"
-default_artifact_root: "s3://datalake/mlflow/artifacts"
+dbConnectionString: "" # Set through shell or CI secrets
+defaultArtifactRoot: "s3://lewagon-garage/mlflow-artifacts"
 
-minio:
-  url: minio.default.svc.cluster.local:9000
-  accesskey: secret
-  secretkey: secret
+artifactStorage:
+  endpoint: "https://ams3.digitaloceanspaces.com"
+  key: ""
+  secret: ""
 
 nameOverride: ""
 fullnameOverride: ""
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 80
-  annotations: {}
-  ## Set the LoadBalancer service type to internal only.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-  ##
-  # loadBalancerIP:
-
-  ## Load Balancer sources
-  ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-  ##
-  # loadBalancerSourceRanges:
-  # - 10.10.10.0/24
-
-## Configure Ingress based on the documentation here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-##
+ 
 ingress:
-  enabled: false
-  annotations: {}
-  tls: []
-  hosts: []
+  enabled: true
+  annotations: 
+    kubernetes.io/ingress.class: "traefik"
+    certmanager.k8s.io/issuer: "letsencrypt-prod-issuer"
+    certmanager.k8s.io/acme-challenge-type: "http01"
+  tls: 
+    - secretName: tls-cert
+      hosts:
+        - mlflow.lewagon.co
+  hosts: 
+    - mlflow.lewagon.co
   path: /
 
 resources: {}
